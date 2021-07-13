@@ -1,3 +1,12 @@
 micronaut:
   application:
     name: keymanagerGrpc
+datasources:
+  default:
+    url: jdbc:mysql://localhost:3306/keymanager
+    driverClassName: com.mysql.cj.jdbc.Driver
+    username: root
+    password: password
+    schema-generate: CREATE-DROP
+    dialect: MYSQL
+jpa.default.properties.hibernate.hbm2ddl.auto: update

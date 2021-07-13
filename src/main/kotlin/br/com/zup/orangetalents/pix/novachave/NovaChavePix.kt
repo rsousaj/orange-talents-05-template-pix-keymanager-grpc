@@ -1,0 +1,66 @@
+package br.com.zup.orangetalents.pix.novachave
+
+import io.micronaut.core.annotation.Introspected
+import org.hibernate.validator.internal.constraintvalidators.hv.EmailValidator
+import org.hibernate.validator.internal.constraintvalidators.hv.br.CPFValidator
+import java.util.*
+import javax.validation.constraints.NotBlank
+import javax.validation.constraints.NotNull
+
+@ValidaPix
+@Introspected
+data class NovaChavePix(
+    @field:NotBlank
+    @ValidoUUID
+    val codigoCliente: String,
+
+    @field:NotNull
+    val tipoChave: TipoChave,
+
+    val chave: String,
+
+    @field:NotNull
+    val tipoConta: TipoConta
+) {
+
+    fun paraModelo(conta: Conta): ChavePix {
+        return ChavePix(
+            tipoChave = tipoChave.toString(),
+            chave = if (tipoChave == TipoChave.ALEATORIO) UUID.randomUUID().toString()
+                    else this.chave,
+            conta = conta
+        )
+    }
+}
+
+enum class TipoConta {
+    CONTA_CORRENTE, CONTA_POUPANCA
+}
+
+enum class TipoChave {
+    CPF {
+        override fun valida(chave: String): Boolean {
+            return CPFValidator().run {
+                initialize(null)
+                isValid(chave, null)
+            }
+        }
+    }, CELULAR {
+        override fun valida(chave: String): Boolean {
+            return chave.matches("^\\+[1-9][0-9]\\d{1,14}\$".toRegex())
+        }
+    }, EMAIL {
+        override fun valida(chave: String): Boolean {
+            return EmailValidator().run {
+                initialize(null)
+                isValid(chave, null)
+            }
+        }
+    }, ALEATORIO {
+        override fun valida(chave: String): Boolean {
+            return chave.isNullOrBlank()
+        }
+    };
+
+    abstract fun valida(chave: String): Boolean
+}
