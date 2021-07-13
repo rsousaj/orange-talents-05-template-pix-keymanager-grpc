@@ -6,6 +6,8 @@ import org.hibernate.validator.internal.constraintvalidators.hv.br.CPFValidator
 import java.util.*
 import javax.validation.constraints.NotBlank
 import javax.validation.constraints.NotNull
+import javax.validation.constraints.Size
+import kotlin.math.max
 
 @ValidaPix
 @Introspected
@@ -17,6 +19,7 @@ data class NovaChavePix(
     @field:NotNull
     val tipoChave: TipoChave,
 
+    @field:Size(max = 77)
     val chave: String,
 
     @field:NotNull
