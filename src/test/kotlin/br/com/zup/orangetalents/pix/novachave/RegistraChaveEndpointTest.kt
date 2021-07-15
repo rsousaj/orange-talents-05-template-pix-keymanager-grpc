@@ -1,8 +1,13 @@
 package br.com.zup.orangetalents.pix.novachave
 
 import br.com.zup.orangetalents.*
+import br.com.zup.orangetalents.integracao.ConsultaContaResponse
+import br.com.zup.orangetalents.integracao.ContasDeClientesItauClient
+import br.com.zup.orangetalents.integracao.TitularContaResponse
 import br.com.zup.orangetalents.pix.ChavePix
 import br.com.zup.orangetalents.pix.ChavePixRepository
+import br.com.zup.orangetalents.pix.Conta
+import br.com.zup.orangetalents.pix.TitularConta
 import com.google.rpc.BadRequest
 import io.grpc.ManagedChannel
 import io.grpc.Status
@@ -22,7 +27,7 @@ import javax.inject.Singleton
 
 @MicronautTest(transactional = false)
 internal class RegistraChaveEndpointTest(
-    @Inject private val grpcClient: KeyManagerGrpcServiceGrpc.KeyManagerGrpcServiceBlockingStub,
+    @Inject private val grpcClient: KeyManagerRegisterGrpcServiceGrpc.KeyManagerRegisterGrpcServiceBlockingStub,
     @Inject private val chavePixRepository: ChavePixRepository
 ) {
 
@@ -121,8 +126,8 @@ internal class RegistraChaveEndpointTest(
     @Factory
     class clientGrpcFactory() {
         @Singleton
-        fun blockingStub(@GrpcChannel(GrpcServerChannel.NAME) channel: ManagedChannel): KeyManagerGrpcServiceGrpc.KeyManagerGrpcServiceBlockingStub {
-            return KeyManagerGrpcServiceGrpc.newBlockingStub(channel)
+        fun blockingStub(@GrpcChannel(GrpcServerChannel.NAME) channel: ManagedChannel): KeyManagerRegisterGrpcServiceGrpc.KeyManagerRegisterGrpcServiceBlockingStub {
+            return KeyManagerRegisterGrpcServiceGrpc.newBlockingStub(channel)
         }
     }
 
@@ -143,12 +148,15 @@ internal class RegistraChaveEndpointTest(
             .setTipoConta(tipoConta)
             .build()
     }
+}
 
-    private fun criaChavePix(chave: String = "email@email.com") : ChavePix {
-        return ChavePix(
-            TipoChave.EMAIL.toString(),
-            chave,
-            Conta(TipoConta.CONTA_CORRENTE.toString(), "numero", "agencia", TitularConta("1", "nome", "99089748075"))
-        )
-    }
+internal fun criaChavePix(
+    chave: String = "email@email.com",
+    clienteId: String = "1"
+    ) : ChavePix {
+    return ChavePix(
+        TipoChave.EMAIL.toString(),
+        chave,
+        Conta(TipoConta.CONTA_CORRENTE.toString(), "numero", "agencia", TitularConta(clienteId, "nome", "99089748075"))
+    )
 }
