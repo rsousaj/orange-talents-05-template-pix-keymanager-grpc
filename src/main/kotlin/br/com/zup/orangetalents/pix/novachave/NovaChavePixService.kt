@@ -1,10 +1,11 @@
 package br.com.zup.orangetalents.pix.novachave
 
-import br.com.zup.orangetalents.ConsultaContaResponse
-import br.com.zup.orangetalents.ContasDeClientesItauClient
+import br.com.zup.orangetalents.integracao.ConsultaContaResponse
+import br.com.zup.orangetalents.integracao.ContasDeClientesItauClient
 import br.com.zup.orangetalents.compartilhado.exception.ChavePixExistenteException
+import br.com.zup.orangetalents.pix.ChavePix
+import br.com.zup.orangetalents.pix.ChavePixRepository
 import io.micronaut.validation.Validated
-import javax.inject.Inject
 import javax.inject.Singleton
 import javax.validation.Valid
 

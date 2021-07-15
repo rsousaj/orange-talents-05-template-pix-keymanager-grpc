@@ -1,7 +1,7 @@
-package br.com.zup.orangetalents
+package br.com.zup.orangetalents.integracao
 
-import br.com.zup.orangetalents.pix.novachave.Conta
-import br.com.zup.orangetalents.pix.novachave.TitularConta
+import br.com.zup.orangetalents.pix.Conta
+import br.com.zup.orangetalents.pix.TitularConta
 import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.PathVariable
 import io.micronaut.http.annotation.QueryValue

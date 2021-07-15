@@ -1,7 +1,8 @@
 package br.com.zup.orangetalents.pix.novachave
 
 import br.com.zup.orangetalents.*
-import br.com.zup.orangetalents.compartilhado.exception.ChavePixExistenteException
+import br.com.zup.orangetalents.pix.ChavePix
+import br.com.zup.orangetalents.pix.ChavePixRepository
 import com.google.rpc.BadRequest
 import io.grpc.ManagedChannel
 import io.grpc.Status
@@ -15,11 +16,9 @@ import io.micronaut.test.extensions.junit5.annotation.MicronautTest
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito
 import org.mockito.Mockito.*
 import javax.inject.Inject
 import javax.inject.Singleton
-import javax.validation.ConstraintViolationException
 
 @MicronautTest(transactional = false)
 internal class RegistraChaveEndpointTest(

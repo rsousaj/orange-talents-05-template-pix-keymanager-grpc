@@ -6,8 +6,12 @@ option java_outer_classname = "KeymanagerGrpc";
 
 package br.com.zup.orangetalents;
 
-service KeyManagerGrpcService {
+service KeyManagerRegisterGrpcService {
   rpc registraChavePix(ChavePixRequest) returns (ChavePixResponse) {}
+}
+
+service KeyManagerRemoveGrpcService {
+  rpc removerChavePix(RemoveChavePixRequest) returns (RemoveChavePixResponse) {}
 }
 
 enum TipoDeConta {
@@ -33,4 +37,13 @@ message ChavePixRequest {
 
 message ChavePixResponse {
   string pixId = 1;
+}
+
+message RemoveChavePixRequest {
+  string pixId = 1;
+  string codigoCliente = 2;
+}
+
+message RemoveChavePixResponse {
+  bool status = 1;
 }

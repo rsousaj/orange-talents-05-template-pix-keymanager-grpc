@@ -1,5 +1,7 @@
 package br.com.zup.orangetalents.pix.novachave
 
+import br.com.zup.orangetalents.pix.ChavePix
+import br.com.zup.orangetalents.pix.Conta
 import io.micronaut.core.annotation.Introspected
 import org.hibernate.validator.internal.constraintvalidators.hv.EmailValidator
 import org.hibernate.validator.internal.constraintvalidators.hv.br.CPFValidator
@@ -7,7 +9,6 @@ import java.util.*
 import javax.validation.constraints.NotBlank
 import javax.validation.constraints.NotNull
 import javax.validation.constraints.Size
-import kotlin.math.max
 
 @ValidaPix
 @Introspected

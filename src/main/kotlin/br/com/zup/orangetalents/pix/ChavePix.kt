@@ -1,4 +1,4 @@
-package br.com.zup.orangetalents.pix.novachave
+package br.com.zup.orangetalents.pix
 
 import java.util.*
 import javax.persistence.*

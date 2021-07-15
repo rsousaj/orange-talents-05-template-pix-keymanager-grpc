@@ -1,4 +1,4 @@
-package br.com.zup.orangetalents.pix.novachave
+package br.com.zup.orangetalents.pix
 
 import org.hibernate.validator.constraints.br.CPF
 import javax.persistence.Column

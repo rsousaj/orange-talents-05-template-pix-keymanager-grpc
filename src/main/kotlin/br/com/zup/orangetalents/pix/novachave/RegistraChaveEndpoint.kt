@@ -1,10 +1,6 @@
 package br.com.zup.orangetalents.pix.novachave
 
-import br.com.zup.orangetalents.ChavePixRequest
-import br.com.zup.orangetalents.ChavePixResponse
-import br.com.zup.orangetalents.KeyManagerGrpcServiceGrpc
-import br.com.zup.orangetalents.TipoDeChave
-import br.com.zup.orangetalents.TipoDeConta
+import br.com.zup.orangetalents.*
 import br.com.zup.orangetalents.compartilhado.ErrorHandler
 import io.grpc.stub.StreamObserver
 import java.util.*
@@ -13,7 +9,7 @@ import javax.inject.Singleton
 @Singleton
 class RegistraChaveEndpoint(
     private val novaChavePixService: NovaChavePixService
-) : KeyManagerGrpcServiceGrpc.KeyManagerGrpcServiceImplBase() {
+) : KeyManagerRegisterGrpcServiceGrpc.KeyManagerRegisterGrpcServiceImplBase() {
 
     @ErrorHandler
     override fun registraChavePix(request: ChavePixRequest, responseObserver: StreamObserver<ChavePixResponse>?) {

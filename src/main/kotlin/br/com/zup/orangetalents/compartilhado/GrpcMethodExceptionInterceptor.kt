@@ -1,6 +1,7 @@
 package br.com.zup.orangetalents.compartilhado
 
 import br.com.zup.orangetalents.compartilhado.exception.ChavePixExistenteException
+import br.com.zup.orangetalents.compartilhado.exception.ChavePixNaoEncontradaException
 import com.google.rpc.BadRequest
 import com.google.rpc.Code
 import io.grpc.Status
@@ -24,6 +25,7 @@ class GrpcMethodExceptionInterceptor : MethodInterceptor<Any, Any?> {
         } catch (ex: Exception) {
             val error: StatusRuntimeException = when (ex) {
                 is ChavePixExistenteException -> Status.ALREADY_EXISTS.withCause(ex).withDescription(ex.message).asRuntimeException()
+                is ChavePixNaoEncontradaException ->  asRunTimeException(Status.NOT_FOUND, ex)
                 is ConstraintViolationException -> constroiExcecaoArgumetosInvalidos(ex)
                 is HttpClientException -> asRunTimeException(Status.UNAVAILABLE, ex)
                 is IllegalStateException -> asRunTimeException(Status.FAILED_PRECONDITION, ex)
