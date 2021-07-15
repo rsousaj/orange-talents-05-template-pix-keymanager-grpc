@@ -25,4 +25,7 @@ class ChavePix(
 
     @Id
     val id: String = UUID.randomUUID().toString()
+
+    var clienteId = ""
+        get() = conta.titular.id
 }

@@ -1,8 +1,8 @@
 package br.com.zup.orangetalents.pix.removechave
 
-import br.com.zup.orangetalents.KeyManagerRegisterGrpcServiceGrpc
 import br.com.zup.orangetalents.KeyManagerRemoveGrpcServiceGrpc
 import br.com.zup.orangetalents.RemoveChavePixRequest
+import br.com.zup.orangetalents.pix.ChavePix
 import br.com.zup.orangetalents.pix.ChavePixRepository
 import br.com.zup.orangetalents.pix.novachave.criaChavePix
 import io.grpc.ManagedChannel
@@ -12,6 +12,7 @@ import io.micronaut.context.annotation.Factory
 import io.micronaut.grpc.annotation.GrpcChannel
 import io.micronaut.grpc.server.GrpcServerChannel
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -24,42 +25,63 @@ internal class RemoveChaveEndpointTest(
     private val grpcClient: KeyManagerRemoveGrpcServiceGrpc.KeyManagerRemoveGrpcServiceBlockingStub
 ) {
 
+    lateinit var chaveExistente: ChavePix
+
     @BeforeEach
     fun setUp() {
+        chaveExistente = chavePixRepository.save(criaChavePix(
+            clienteId = UUID.randomUUID().toString()
+        ))
+    }
+
+    @AfterEach
+    fun tearDown() {
         chavePixRepository.deleteAll()
     }
 
     @Test
     fun `deve remover uma chave pix existente`() {
-        val clienteId = UUID.randomUUID().toString()
-        val chavePixCriada = chavePixRepository.save(criaChavePix(clienteId = clienteId))
+        val response = grpcClient.removerChavePix(
+            RemoveChavePixRequest.newBuilder()
+                .setPixId(chaveExistente.id)
+                .setCodigoCliente(chaveExistente.clienteId)
+                .build()
+        )
 
-        grpcClient.removerChavePix(RemoveChavePixRequest.newBuilder()
-            .setPixId(chavePixCriada.id)
-            .setCodigoCliente(clienteId)
-            .build())
-
-        val chaveDeletada = chavePixRepository.findById(chavePixCriada.id)
+        val chaveDeletada = chavePixRepository.findById(chaveExistente.id)
 
         assertTrue(chaveDeletada.isEmpty)
+        assertTrue(response.status)
+    }
+
+    @Test
+    fun `nao deve remover uma chave pix inexistente`() {
+
+        assertThrows(StatusRuntimeException::class.java) {
+            grpcClient.removerChavePix(RemoveChavePixRequest.newBuilder()
+                .setPixId(UUID.randomUUID().toString())
+                .setCodigoCliente(chaveExistente.clienteId)
+                .build())
+        }.also {
+            assertEquals(Status.Code.NOT_FOUND, it.status.code)
+            assertEquals("NOT_FOUND: Não foi possível encontrar chave PIX com os dados informados.", it.message)
+        }
     }
 
     @Test
     fun `nao deve remover uma chave pix se nao for requisitada pelo cliente dono`() {
-        val clienteDonoChave = UUID.randomUUID().toString()
         val outroCliente = UUID.randomUUID().toString()
-        val chavePixCriada = chavePixRepository.save(criaChavePix(clienteId = clienteDonoChave))
 
         assertThrows(StatusRuntimeException::class.java) {
             grpcClient.removerChavePix(RemoveChavePixRequest.newBuilder()
-                .setPixId(chavePixCriada.id)
+                .setPixId(chaveExistente.id)
                 .setCodigoCliente(outroCliente)
                 .build())
         }.also {
             assertEquals(Status.Code.NOT_FOUND, it.status.code)
         }
 
-        val chaveExiste = chavePixRepository.existsById(chavePixCriada.id)
+        val chaveExiste = chavePixRepository.existsById(chaveExistente.id)
         assertTrue(chaveExiste)
     }
 
