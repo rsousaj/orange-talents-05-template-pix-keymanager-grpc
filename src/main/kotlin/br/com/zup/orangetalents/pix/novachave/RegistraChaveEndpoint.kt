@@ -12,21 +12,21 @@ import javax.inject.Singleton
 
 @Singleton
 class RegistraChaveEndpoint(
-    val novaChavePixService: NovaChavePixService
+    private val novaChavePixService: NovaChavePixService
 ) : KeyManagerGrpcServiceGrpc.KeyManagerGrpcServiceImplBase() {
 
     @ErrorHandler
-    override fun registraChavePix(request: ChavePixRequest?, responseObserver: StreamObserver<ChavePixResponse>?) {
+    override fun registraChavePix(request: ChavePixRequest, responseObserver: StreamObserver<ChavePixResponse>?) {
         // faz o binding de ChavePixRequest para NovaChavePix com o objetivo de utilizar a BeanValidation
-        val novaChavePix = request?.paraChave()
+        val novaChavePix = request.paraChave()
 
         // registra a chave através do NovaChavePixService
-        val chavePixCriada = novaChavePixService.registra(novaChavePix!!)
+        val chavePixCriada = novaChavePixService.registra(novaChavePix)
 
         // finaliza o processamento com o retorno do ChavePixResponse
         responseObserver?.onNext(
             ChavePixResponse.newBuilder()
-                .setPixId(chavePixCriada.id.toString())
+                .setPixId(chavePixCriada.id)
                 .build()
         )
         responseObserver?.onCompleted()
@@ -39,11 +39,11 @@ fun ChavePixRequest.paraChave(): NovaChavePix {
         tipoChave = when (this.tipoChave) {
             TipoDeChave.TIPO_CHAVE_DESCONHECIDA -> null
             else -> TipoChave.valueOf(this.tipoChave.name)
-        }!!,
+        },
         chave = this.chave,
         tipoConta = when (this.tipoConta) {
             TipoDeConta.TIPO_CONTA_DESCONHECIDO -> null
             else -> TipoConta.valueOf(this.tipoConta.name)
-        }!!
+        }
     )
 }

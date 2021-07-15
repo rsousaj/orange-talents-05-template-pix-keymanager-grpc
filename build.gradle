@@ -40,13 +40,17 @@ dependencies {
     runtimeOnly("ch.qos.logback:logback-classic")
     runtimeOnly("mysql:mysql-connector-java")
     implementation("io.micronaut:micronaut-http-client")
-//    implementation("io.micronaut.beanvalidation:micronaut-hibernate-validator")
     implementation("io.micronaut:micronaut-validation")
     implementation("org.hibernate:hibernate-validator:6.1.6.Final")
 
     runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
-//    testImplementation("io.micronaut:micronaut-http-client")
 
+//    testImplementation("io.micronaut:micronaut-http-client")
+    testImplementation("org.mockito:mockito-core")
+    testImplementation("org.mockito:mockito-junit-jupiter:2.17.0")
+    testImplementation("com.h2database:h2:1.4.200")
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("io.micronaut.test:micronaut-test-junit5:2.3.7")
 }
 
 

@@ -24,7 +24,7 @@ class ValidaPixValidator : ConstraintValidator<ValidaPix, NovaChavePix> {
         annotationMetadata: AnnotationValue<ValidaPix>,
         context: ConstraintValidatorContext
     ): Boolean {
-        if (value?.tipoChave == null) return false
+        if (value?.tipoChave == null) return true
 
         return value.tipoChave.valida(value.chave)
     }

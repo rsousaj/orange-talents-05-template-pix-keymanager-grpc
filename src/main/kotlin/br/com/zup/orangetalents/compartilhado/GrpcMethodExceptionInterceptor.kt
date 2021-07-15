@@ -22,13 +22,12 @@ class GrpcMethodExceptionInterceptor : MethodInterceptor<Any, Any?> {
         return try {
             context.proceed()
         } catch (ex: Exception) {
-            ex.printStackTrace()
-
             val error: StatusRuntimeException = when (ex) {
                 is ChavePixExistenteException -> Status.ALREADY_EXISTS.withCause(ex).withDescription(ex.message).asRuntimeException()
                 is ConstraintViolationException -> constroiExcecaoArgumetosInvalidos(ex)
-                is HttpClientException -> Status.UNAVAILABLE.withCause(ex).withDescription(ex.message).asRuntimeException()
-                else -> Status.INTERNAL.withDescription(ex.message).asRuntimeException()
+                is HttpClientException -> asRunTimeException(Status.UNAVAILABLE, ex)
+                is IllegalStateException -> asRunTimeException(Status.FAILED_PRECONDITION, ex)
+                else -> asRunTimeException(Status.INTERNAL, ex)
             }
 
             val responseObserver = context.parameterValues[1] as StreamObserver<*>
@@ -52,5 +51,9 @@ class GrpcMethodExceptionInterceptor : MethodInterceptor<Any, Any?> {
             .build()
 
         return StatusProto.toStatusRuntimeException(statusProto)
+    }
+
+    private fun asRunTimeException(status: Status, ex: Exception): StatusRuntimeException {
+        return status.withDescription(ex.message).asRuntimeException()
     }
 }

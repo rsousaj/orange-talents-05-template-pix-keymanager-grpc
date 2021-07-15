@@ -7,6 +7,7 @@ import java.util.*
 import javax.inject.Singleton
 import javax.validation.Constraint
 import javax.validation.Payload
+import javax.validation.ReportAsSingleViolation
 import kotlin.annotation.AnnotationRetention.*
 import kotlin.annotation.AnnotationTarget.*
 import kotlin.reflect.KClass
@@ -27,6 +28,8 @@ class ValidaUUIDValidator : ConstraintValidator<ValidoUUID, String> {
         annotationMetadata: AnnotationValue<ValidoUUID>,
         context: ConstraintValidatorContext
     ): Boolean {
+        if (value.isNullOrBlank()) return true
+
         return try {
             UUID.fromString(value)
             true
