@@ -14,14 +14,10 @@ class RemoveChavePixService(
     private val chavePixRepository: ChavePixRepository
 ) {
 
-    fun remove(@ValidoUUID id: String, @ValidoUUID clientId: String): RemoveChavePixResponse {
+    fun remove(@ValidoUUID id: String, @ValidoUUID clientId: String) {
         val chaveEncontrada = chavePixRepository.findByIdAndClientId(id, clientId)
             .orElseThrow { ChavePixNaoEncontradaException("Não foi possível encontrar chave PIX com os dados informados.") }
 
         chavePixRepository.delete(chaveEncontrada)
-
-        return RemoveChavePixResponse.newBuilder()
-            .setStatus(true)
-            .build()
     }
 }

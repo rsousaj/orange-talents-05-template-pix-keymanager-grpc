@@ -20,9 +20,11 @@ class RemoveChaveEndpoint(
         request: RemoveChavePixRequest,
         responseObserver: StreamObserver<RemoveChavePixResponse>?
     ) {
-        val response = service.remove(id = request.pixId, clientId = request.codigoCliente)
+        service.remove(id = request.pixId, clientId = request.codigoCliente)
 
-        responseObserver?.onNext(response)
+        responseObserver?.onNext(RemoveChavePixResponse.newBuilder()
+            .setStatus(true)
+            .build())
         responseObserver?.onCompleted()
     }
 }
