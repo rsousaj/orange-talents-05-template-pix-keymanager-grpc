@@ -7,6 +7,7 @@ import br.com.zup.orangetalents.pix.novachave.ValidoUUID
 import io.micronaut.validation.Validated
 import javax.inject.Singleton
 import javax.validation.Valid
+import javax.validation.constraints.NotBlank
 
 @Singleton
 @Validated
@@ -14,7 +15,10 @@ class RemoveChavePixService(
     private val chavePixRepository: ChavePixRepository
 ) {
 
-    fun remove(@ValidoUUID id: String, @ValidoUUID clientId: String) {
+    fun remove(
+        @NotBlank @ValidoUUID id: String,
+        @NotBlank @ValidoUUID clientId: String
+    ) {
         val chaveEncontrada = chavePixRepository.findByIdAndClientId(id, clientId)
             .orElseThrow { ChavePixNaoEncontradaException("Não foi possível encontrar chave PIX com os dados informados.") }
 
