@@ -1,5 +1,6 @@
 package br.com.zup.orangetalents.pix
 
+import java.time.LocalDateTime
 import java.util.*
 import javax.persistence.*
 import javax.validation.Valid
@@ -9,13 +10,14 @@ import javax.validation.constraints.NotNull
 @Entity
 @Table(name = "chave_pix")
 class ChavePix(
-    @field:NotBlank
+    @field:NotNull
     @Column(nullable = false)
-    val tipoChave: String,
+    @Enumerated(EnumType.STRING)
+    val tipoChave: TipoChave?,
 
     @field:NotBlank
     @Column(nullable = false)
-    val chave: String,
+    var chave: String,
 
     @Embedded
     @Valid
@@ -26,6 +28,8 @@ class ChavePix(
     @Id
     val id: String = UUID.randomUUID().toString()
 
-    var clienteId = ""
+    var createdAt = LocalDateTime.now()
+
+    val clienteId
         get() = conta.titular.id
 }

@@ -2,6 +2,8 @@ package br.com.zup.orangetalents.pix.novachave
 
 import br.com.zup.orangetalents.*
 import br.com.zup.orangetalents.compartilhado.ErrorHandler
+import br.com.zup.orangetalents.pix.TipoChave
+import br.com.zup.orangetalents.pix.TipoConta
 import io.grpc.stub.StreamObserver
 import java.util.*
 import javax.inject.Singleton

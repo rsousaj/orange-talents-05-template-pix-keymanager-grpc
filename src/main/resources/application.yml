@@ -1,12 +1,27 @@
 micronaut:
   application:
     name: keymanagerGrpc
+grpc:
+  server:
+    port: ${SERVER_PORT:50051}
+    keep-alive-time: 1h
+    max-inbound-message-size: 1024
+
 datasources:
   default:
-    url: jdbc:mysql://localhost:3306/keymanager
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/keymanager
     driverClassName: com.mysql.cj.jdbc.Driver
     username: root
     password: password
     schema-generate: CREATE-DROP
     dialect: MYSQL
 jpa.default.properties.hibernate.hbm2ddl.auto: update
+
+integracao:
+  bacen:
+    url: ${INTEGRACAO_BACEN_URL:`http://localhost:8082`}
+  itau:
+    ispb: '60701190'
+    erp:
+      url: ${INTEGRACAO_ITAU_ERP_URL:`http://localhost:9091`}
+

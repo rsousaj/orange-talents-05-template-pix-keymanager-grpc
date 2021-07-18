@@ -12,6 +12,8 @@ import io.micronaut.aop.InterceptorBean
 import io.micronaut.aop.MethodInterceptor
 import io.micronaut.aop.MethodInvocationContext
 import io.micronaut.http.client.exceptions.HttpClientException
+import io.micronaut.http.client.exceptions.HttpClientResponseException
+import org.slf4j.LoggerFactory
 import javax.inject.Singleton
 import javax.validation.ConstraintViolationException
 
@@ -19,15 +21,19 @@ import javax.validation.ConstraintViolationException
 @InterceptorBean(ErrorHandler::class)
 class GrpcMethodExceptionInterceptor : MethodInterceptor<Any, Any?> {
 
+    val logger = LoggerFactory.getLogger(this::class.java)
+
     override fun intercept(context: MethodInvocationContext<Any, Any?>): Any? {
         return try {
             context.proceed()
         } catch (ex: Exception) {
+            logger.info("Ocorreu o seguinte erro ao tentar executar o metodo ${context.executableMethod.methodName}: ${ex.message}")
+
             val error: StatusRuntimeException = when (ex) {
                 is ChavePixExistenteException -> Status.ALREADY_EXISTS.withCause(ex).withDescription(ex.message).asRuntimeException()
                 is ChavePixNaoEncontradaException ->  asRunTimeException(Status.NOT_FOUND, ex)
                 is ConstraintViolationException -> constroiExcecaoArgumetosInvalidos(ex)
-                is HttpClientException -> asRunTimeException(Status.UNAVAILABLE, ex)
+                is HttpClientResponseException -> asRunTimeException(Status.UNAVAILABLE, ex)
                 is IllegalStateException -> asRunTimeException(Status.FAILED_PRECONDITION, ex)
                 else -> asRunTimeException(Status.INTERNAL, ex)
             }
