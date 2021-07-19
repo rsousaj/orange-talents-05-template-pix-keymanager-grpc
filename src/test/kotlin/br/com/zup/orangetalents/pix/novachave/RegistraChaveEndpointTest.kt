@@ -1,29 +1,28 @@
 package br.com.zup.orangetalents.pix.novachave
 
 import br.com.zup.orangetalents.*
-import br.com.zup.orangetalents.integracao.ConsultaContaResponse
-import br.com.zup.orangetalents.integracao.ContasDeClientesItauClient
-import br.com.zup.orangetalents.integracao.TitularContaResponse
-import br.com.zup.orangetalents.pix.ChavePix
-import br.com.zup.orangetalents.pix.ChavePixRepository
-import br.com.zup.orangetalents.pix.Conta
-import br.com.zup.orangetalents.pix.TitularConta
+import br.com.zup.orangetalents.integracao.*
+import br.com.zup.orangetalents.pix.*
 import com.google.rpc.BadRequest
 import io.grpc.ManagedChannel
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.grpc.protobuf.StatusProto
+import io.micronaut.context.ApplicationContext
+import io.micronaut.context.annotation.Bean
 import io.micronaut.context.annotation.Factory
 import io.micronaut.grpc.annotation.GrpcChannel
 import io.micronaut.grpc.server.GrpcServerChannel
+import io.micronaut.http.HttpResponse
 import io.micronaut.test.annotation.MockBean
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.mockito.Mockito.*
+import java.time.LocalDateTime
 import javax.inject.Inject
-import javax.inject.Singleton
 
 @MicronautTest(transactional = false)
 internal class RegistraChaveEndpointTest(
@@ -34,34 +33,74 @@ internal class RegistraChaveEndpointTest(
     @Inject
     lateinit var itauClient: ContasDeClientesItauClient
 
+    @Inject
+    lateinit var bacenClient: BacenClient
+
     @BeforeEach
     fun setUp() {
         chavePixRepository.deleteAll()
     }
 
+    val chavePixTest = criaChavePix()
+
+    val chavePixRequestTest = criaChavePixRequest(
+        chave = chavePixTest.chave,
+        codigoCliente = chavePixTest.clienteId,
+        tipoChave = TipoDeChave.EMAIL,
+        tipoConta = TipoDeConta.CONTA_CORRENTE
+    )
+
+    val createPixKeyRequestTest = criaCreatePixKeyRequest(
+        pixKeyType = PixKeyType.of(chavePixTest.tipoChave),
+        chave = chavePixTest.chave,
+        agencia = chavePixTest.conta.agencia,
+        conta = chavePixTest.conta.numero,
+        tipoConta = AccountType.convertAccountType(chavePixTest.conta.tipoConta),
+        nomeTitular = chavePixTest.conta.titular.nome,
+        cpfTitular = chavePixTest.conta.titular.cpf
+    )
+
+    val createPixKeyResponseTest = criaCreatePixKeyResponse(
+        pixKeyType = PixKeyType.of(chavePixTest.tipoChave),
+        chave = chavePixTest.chave,
+        agencia = chavePixTest.conta.agencia,
+        conta = chavePixTest.conta.numero,
+        tipoConta = AccountType.convertAccountType(chavePixTest.conta.tipoConta),
+        nomeTitular = chavePixTest.conta.titular.nome,
+        cpfTitular = chavePixTest.conta.titular.cpf
+    )
+
     @Test
     fun `deve registrar chave pix`() {
-        val chavePixRequest = criaChavePixRequest()
-
         val consultaContaResponse = ConsultaContaResponse(
-            chavePixRequest.tipoConta.toString(),
-            "agencia",
-            "numero",
-            TitularContaResponse("1", "nome", "99089748075")
+            chavePixRequestTest.tipoConta.toString(),
+            chavePixTest.conta.agencia,
+            chavePixTest.conta.numero,
+            TitularContaResponse(
+                chavePixTest.clienteId,
+                chavePixTest.conta.titular.nome,
+                chavePixTest.conta.titular.cpf
+            )
         )
 
-        `when`(itauClient.consultaContaPorClienteETipo(chavePixRequest.codigoCliente, chavePixRequest.tipoConta.toString()))
+        `when`(itauClient.consultaContaPorClienteETipo(chavePixRequestTest.codigoCliente, chavePixRequestTest.tipoConta.toString()))
             .thenReturn(consultaContaResponse)
 
-        val chavePixResponse = grpcClient.registraChavePix(chavePixRequest)
+        `when`(bacenClient.registraChavePix(createPixKeyRequestTest))
+            .thenReturn(HttpResponse.created(createPixKeyResponseTest)
+            )
+
+        val chavePixResponse = grpcClient.registraChavePix(chavePixRequestTest)
+        val chavePixCadastrada = chavePixRepository.findById(chavePixResponse.pixId)
 
         assertTrue(chavePixResponse.pixId.isNotBlank())
+        assertTrue(chavePixCadastrada.isPresent)
     }
 
     @Test
-    fun `nao deve registrar se chave já existir`() {
+    fun `nao deve registrar se chave já existir no Banco`() {
         val chaveExistente = "email@teste.com"
-        val chavePixCadastrada = criaChavePix(chave = chaveExistente)
+        val chavePixCadastrada = chavePixTest.apply { chave = chaveExistente }
         chavePixRepository.save(chavePixCadastrada)
 
         val chavePixRequest = criaChavePixRequest(chave = chaveExistente)
@@ -75,18 +114,45 @@ internal class RegistraChaveEndpointTest(
     }
 
     @Test
-    fun `nao deve registrar se conta não for localizada`() {
-        val chavePixRequest = criaChavePixRequest()
+    fun `nao deve registrar se chave já existir no Banco Central`() {
+        val consultaContaResponse = ConsultaContaResponse(
+            chavePixRequestTest.tipoConta.toString(),
+            chavePixTest.conta.agencia,
+            chavePixTest.conta.numero,
+            TitularContaResponse(
+                chavePixTest.clienteId,
+                chavePixTest.conta.titular.nome,
+                chavePixTest.conta.titular.cpf
+            )
+        )
 
+        `when`(itauClient.consultaContaPorClienteETipo(chavePixRequestTest.codigoCliente, chavePixRequestTest.tipoConta.toString()))
+            .thenReturn(consultaContaResponse)
+
+        `when`(bacenClient.registraChavePix(createPixKeyRequestTest)).thenReturn(HttpResponse.unprocessableEntity())
+
+        assertThrows(StatusRuntimeException::class.java) {
+            grpcClient.registraChavePix(chavePixRequestTest)
+        }.also {
+            val chaveFoiCadastrada = chavePixRepository.existsByChave(chavePixRequestTest.chave)
+
+            assertFalse(chaveFoiCadastrada)
+            assertEquals(Status.Code.ALREADY_EXISTS, it.status.code)
+            assertEquals("A chave pix informada já existe no Banco Central do Brasil.", it.status.description)
+        }
+    }
+
+    @Test
+    fun `nao deve registrar se conta não for localizada`() {
         `when`(
             itauClient.consultaContaPorClienteETipo(
-                chavePixRequest.codigoCliente,
-                chavePixRequest.tipoConta.toString()
+                chavePixRequestTest.codigoCliente,
+                chavePixRequestTest.tipoConta.toString()
             )
         ).thenReturn(null)
 
         assertThrows(StatusRuntimeException::class.java) {
-            grpcClient.registraChavePix(chavePixRequest)
+            grpcClient.registraChavePix(chavePixRequestTest)
         }.also {
             assertEquals(Status.Code.FAILED_PRECONDITION, it.status.code)
             assertEquals("A conta informada não foi encontrada.", it.status.description)
@@ -101,14 +167,8 @@ internal class RegistraChaveEndpointTest(
             grpcClient.registraChavePix(chavePixRequest)
         }.also {
             val statusProto = StatusProto.fromThrowable(it)
-            val violationsList = statusProto?.let { status ->
-                status
-                    .detailsList[0]
-                    .unpack(BadRequest::class.java)
-                    .fieldViolationsList
-            }
 
-            assertEquals(1, violationsList?.size)
+            assertEquals(1, statusProto?.violations()?.size)
             assertEquals("INVALID_ARGUMENT: Requisição com parâmetros inválidos", it.message)
         }
     }
@@ -125,7 +185,7 @@ internal class RegistraChaveEndpointTest(
 
     @Factory
     class clientGrpcFactory() {
-        @Singleton
+        @Bean
         fun blockingStub(@GrpcChannel(GrpcServerChannel.NAME) channel: ManagedChannel): KeyManagerRegisterGrpcServiceGrpc.KeyManagerRegisterGrpcServiceBlockingStub {
             return KeyManagerRegisterGrpcServiceGrpc.newBlockingStub(channel)
         }
@@ -133,6 +193,9 @@ internal class RegistraChaveEndpointTest(
 
     @MockBean(ContasDeClientesItauClient::class)
     fun itauClient(): ContasDeClientesItauClient = mock(ContasDeClientesItauClient::class.java)
+
+    @MockBean(BacenClient::class)
+    fun bacenClient(): BacenClient = mock(BacenClient::class.java)
 
     private fun criaChavePixRequest(
         chave: String = "email@email.com",
@@ -152,11 +215,65 @@ internal class RegistraChaveEndpointTest(
 
 internal fun criaChavePix(
     chave: String = "email@email.com",
-    clienteId: String = "1"
+    clienteId: String = "b0a9fde7-ce93-4a5c-8485-d93c98f0e0a2"
     ) : ChavePix {
     return ChavePix(
-        TipoChave.EMAIL.toString(),
+        TipoChave.EMAIL,
         chave,
-        Conta(TipoConta.CONTA_CORRENTE.toString(), "numero", "agencia", TitularConta(clienteId, "nome", "99089748075"))
+        Conta(TipoConta.CONTA_CORRENTE, "1234", "456789", TitularConta(clienteId, "nome", "99089748075"))
     )
+}
+
+internal fun criaCreatePixKeyRequest(
+    pixKeyType: PixKeyType = PixKeyType.EMAIL,
+    chave: String = "email@email.com",
+    agencia: String = "1234",
+    conta: String = "456789",
+    tipoConta: AccountType = AccountType.CACC,
+    nomeTitular: String = "Nome do Titular",
+    cpfTitular: String = "99089748075"
+): CreatePixKeyRequest {
+    return CreatePixKeyRequest(
+        pixKeyType,
+        chave,
+        CreatePixKeyContaRequest(
+            agencia,
+            conta,
+            tipoConta
+        ),
+        CreatePixKeyTitularRequest(
+            name = nomeTitular,
+            taxIdNumber = cpfTitular
+        )
+    )
+}
+
+internal fun criaCreatePixKeyResponse(
+    pixKeyType: PixKeyType,
+    chave: String,
+    agencia: String,
+    conta: String,
+    tipoConta: AccountType,
+    nomeTitular: String,
+    cpfTitular: String
+): CreatePixKeyResponse {
+    return CreatePixKeyResponse(
+        pixKeyType.toString(),
+        chave,
+        CreatePixKeyContaResponse(
+            "",
+            agencia,
+            conta,
+            tipoConta.toString()
+        ),
+        CreatePixKeyTitularResponse(
+            name = nomeTitular,
+            taxIdNumber = cpfTitular
+        ),
+        LocalDateTime.now()
+    )
+}
+
+internal fun com.google.rpc.Status.violations(): MutableList<*> {
+    return this.detailsList[0].unpack(BadRequest::class.java).fieldViolationsList
 }

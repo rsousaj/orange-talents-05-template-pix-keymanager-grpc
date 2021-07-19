@@ -1,33 +1,25 @@
 package br.com.zup.orangetalents.integracao
 
-import br.com.zup.orangetalents.compartilhado.exception.ChavePixExistenteException
-import br.com.zup.orangetalents.compartilhado.exception.RemocaoNaoAutorizadaException
 import br.com.zup.orangetalents.pix.ChavePix
 import br.com.zup.orangetalents.pix.Conta
 import br.com.zup.orangetalents.pix.TipoChave
 import br.com.zup.orangetalents.pix.TitularConta
-import io.micronaut.aop.InterceptorBean
-import io.micronaut.aop.MethodInterceptor
-import io.micronaut.aop.MethodInvocationContext
 import io.micronaut.http.HttpResponse
-import io.micronaut.http.HttpStatus
 import io.micronaut.http.MediaType
 import io.micronaut.http.annotation.*
 import io.micronaut.http.client.annotation.Client
-import io.micronaut.http.client.exceptions.HttpClientResponseException
-import java.lang.IllegalStateException
-import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.*
-import javax.inject.Singleton
 
 @ErrorHandlerBCB
 @Client("\${integracao.bacen.url}")
 interface BacenClient {
 
-    @Post("/api/v1/pix/keys")
-    @Consumes(MediaType.APPLICATION_XML)
-    @Produces(MediaType.APPLICATION_XML)
+    @Post("/api/v1/pix/keys",
+        consumes = [MediaType.APPLICATION_XML],
+        produces = [MediaType.APPLICATION_XML]
+        )
+//    @Consumes(MediaType.APPLICATION_XML)
+//    @Produces(MediaType.APPLICATION_XML)
     fun registraChavePix(@Body request: CreatePixKeyRequest): HttpResponse<CreatePixKeyResponse>
 
     @Delete("/api/v1/pix/keys/{key}")
@@ -37,6 +29,8 @@ interface BacenClient {
         @PathVariable("key") chave: String,
         @Body request: DeletePixKeyRequest
     ): HttpResponse<DeletePixKeyResponse>
+
+    fun teste() = "testando"
 
 }
 
@@ -111,7 +105,7 @@ data class CreatePixKeyContaRequest(
             return CreatePixKeyContaRequest(
                 accountNumber = conta.numero,
                 branch = conta.agencia,
-                accountType = AccountType.convertAccountType(conta.tipoConta)!!
+                accountType = AccountType.convertAccountType(conta.tipoConta)
             )
         }
     }

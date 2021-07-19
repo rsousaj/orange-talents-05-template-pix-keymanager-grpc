@@ -7,6 +7,7 @@ import br.com.zup.orangetalents.integracao.ContasDeClientesItauClient
 import br.com.zup.orangetalents.integracao.CreatePixKeyRequest
 import br.com.zup.orangetalents.pix.ChavePix
 import br.com.zup.orangetalents.pix.ChavePixRepository
+import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.validation.Validated
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -38,14 +39,17 @@ class NovaChavePixService(
 
         val chavePix = novaChavePix.paraModelo(conta).let { chavePixRepository.save(it) }
 
-        logger.info("Registrando chave Pix (ID: ${chavePix.id}) no sistema do BACEN")
-        bacenClient
-            .registraChavePix(CreatePixKeyRequest.deChavePix(chavePix))
-            .body()
-            ?.let {
-                chavePix.createdAt = it.createdAt
-                chavePix.chave = it.key
-            }
+//        logger.info("Registrando chave Pix (ID: ${chavePix.id}) no sistema do BACEN")
+//        bacenClient
+//            .registraChavePix(CreatePixKeyRequest.deChavePix(chavePix))
+//            .body()
+//            ?.let {
+//                chavePix.createdAt = it.createdAt
+//                chavePix.chave = it.key
+//            }
+
+        val response = bacenClient.registraChavePix(CreatePixKeyRequest.deChavePix(chavePix))
+        println(response.status)
 
         return chavePix
     }
