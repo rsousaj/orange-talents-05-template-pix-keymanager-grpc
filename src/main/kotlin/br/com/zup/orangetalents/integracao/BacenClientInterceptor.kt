@@ -11,7 +11,7 @@ import javax.inject.Singleton
 
 @Singleton
 @InterceptorBean(ErrorHandlerBCB::class)
-class bacenClientInterceptor : MethodInterceptor<BacenClient, Any> {
+class BacenClientInterceptor : MethodInterceptor<BacenClient, Any> {
 
     override fun intercept(context: MethodInvocationContext<BacenClient, Any>): Any? {
         try {

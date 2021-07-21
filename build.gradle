@@ -46,22 +46,13 @@ dependencies {
     runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("io.micronaut.xml:micronaut-jackson-xml")
 
-//    testImplementation("io.micronaut:micronaut-http-client")
-//    testImplementation("org.mockito:mockito-core")
-//    testImplementation("org.mockito:mockito-junit-jupiter:2.17.0")
-    testImplementation("com.h2database:h2:1.4.200")
-//    testImplementation("org.junit.jupiter:junit-jupiter")
-//    testImplementation("io.micronaut.test:micronaut-test-junit5:2.3.7")
-
-    // build gradle alexandre
-    kaptTest ("io.micronaut:micronaut-inject-java")
-    testImplementation("org.mockito:mockito-junit-jupiter:3.11.2")
-    testImplementation("org.testcontainers:junit-jupiter")
-    testImplementation("org.testcontainers:postgresql")
-    testImplementation("org.testcontainers:testcontainers")
     testImplementation("io.micronaut:micronaut-http-client")
-    testImplementation("org.hamcrest:hamcrest-core:2.2")
     testImplementation("org.mockito:mockito-core")
+    testImplementation("org.mockito:mockito-junit-jupiter:2.17.0")
+    testImplementation("com.h2database:h2:1.4.200")
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("io.micronaut.test:micronaut-test-junit5:2.3.7")
+    testImplementation("org.hamcrest:hamcrest-all:1.3")
 }
 
 

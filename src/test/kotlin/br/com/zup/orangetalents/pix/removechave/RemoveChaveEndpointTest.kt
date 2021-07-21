@@ -2,6 +2,9 @@ package br.com.zup.orangetalents.pix.removechave
 
 import br.com.zup.orangetalents.KeyManagerRemoveGrpcServiceGrpc
 import br.com.zup.orangetalents.RemoveChavePixRequest
+import br.com.zup.orangetalents.integracao.BacenClient
+import br.com.zup.orangetalents.integracao.DeletePixKeyRequest
+import br.com.zup.orangetalents.integracao.DeletePixKeyResponse
 import br.com.zup.orangetalents.pix.ChavePix
 import br.com.zup.orangetalents.pix.ChavePixRepository
 import br.com.zup.orangetalents.pix.novachave.criaChavePix
@@ -11,12 +14,18 @@ import io.grpc.StatusRuntimeException
 import io.micronaut.context.annotation.Factory
 import io.micronaut.grpc.annotation.GrpcChannel
 import io.micronaut.grpc.server.GrpcServerChannel
+import io.micronaut.http.HttpResponse
+import io.micronaut.test.annotation.MockBean
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.Mockito
+import org.mockito.Mockito.*
+import java.time.LocalDateTime
 import java.util.*
+import javax.inject.Inject
 import javax.inject.Singleton
 
 @MicronautTest(transactional = false)
@@ -24,6 +33,9 @@ internal class RemoveChaveEndpointTest(
     private val chavePixRepository: ChavePixRepository,
     private val grpcClient: KeyManagerRemoveGrpcServiceGrpc.KeyManagerRemoveGrpcServiceBlockingStub
 ) {
+
+    @Inject
+    lateinit var bacenClient: BacenClient
 
     lateinit var chaveExistente: ChavePix
 
@@ -41,6 +53,27 @@ internal class RemoveChaveEndpointTest(
 
     @Test
     fun `deve remover uma chave pix existente`() {
+        `when`(bacenClient.removerChavePix(chaveExistente.chave, DeletePixKeyRequest(chaveExistente.chave)))
+            .thenReturn(HttpResponse.ok(DeletePixKeyResponse(key = chaveExistente.chave, deletedAt = LocalDateTime.now(), participant = "")))
+
+        val response = grpcClient.removerChavePix(
+            RemoveChavePixRequest.newBuilder()
+                .setPixId(chaveExistente.id)
+                .setCodigoCliente(chaveExistente.clienteId)
+                .build()
+        )
+
+        val chaveDeletada = chavePixRepository.findById(chaveExistente.id)
+
+        assertTrue(chaveDeletada.isEmpty)
+        assertTrue(response.status)
+    }
+
+    @Test
+    fun `deve remover uma chave pix mesmo que ela não tenha sido encontrada no Banco Central do Brasil`() {
+        `when`(bacenClient.removerChavePix(chaveExistente.chave, DeletePixKeyRequest(chaveExistente.chave)))
+            .thenReturn(HttpResponse.notFound())
+
         val response = grpcClient.removerChavePix(
             RemoveChavePixRequest.newBuilder()
                 .setPixId(chaveExistente.id)
@@ -84,6 +117,9 @@ internal class RemoveChaveEndpointTest(
         val chaveExiste = chavePixRepository.existsById(chaveExistente.id)
         assertTrue(chaveExiste)
     }
+
+    @MockBean(BacenClient::class)
+    fun bacenClient(): BacenClient = mock(BacenClient::class.java)
 
     @Factory
     class clientFactory {

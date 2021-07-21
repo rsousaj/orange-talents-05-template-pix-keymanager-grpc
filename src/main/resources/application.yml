@@ -20,6 +20,7 @@ jpa.default.properties.hibernate.hbm2ddl.auto: update
 integracao:
   bacen:
     url: ${INTEGRACAO_BACEN_URL:`http://localhost:8082`}
+    port: ${INTEGRACAO_BACEN_PORT:8082}
   itau:
     ispb: '60701190'
     erp:

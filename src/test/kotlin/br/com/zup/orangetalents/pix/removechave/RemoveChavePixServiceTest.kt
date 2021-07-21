@@ -1,6 +1,11 @@
 package br.com.zup.orangetalents.pix.removechave
 
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
+import org.hamcrest.CoreMatchers
+import org.hamcrest.CoreMatchers.containsString
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers
+import org.hamcrest.Matchers.containsInAnyOrder
 import org.hibernate.annotations.Source
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -18,7 +23,8 @@ internal class RemoveChavePixServiceTest(
         assertThrows(ConstraintViolationException::class.java) {
             removeChavePixService.remove("", "")
         } .also {
-            assertEquals("remove.id: must not be blank, remove.clientId: must not be blank", it.message)
+            assertThat(it.message, containsString("remove.id: must not be blank"))
+            assertThat(it.message, containsString("remove.clientId: must not be blank"))
         }
     }
 

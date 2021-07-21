@@ -1,6 +1,10 @@
 package br.com.zup.orangetalents.pix.novachave
 
-import br.com.zup.orangetalents.*
+import br.com.zup.orangetalents.ChavePixRequest
+import br.com.zup.orangetalents.KeyManagerRegisterGrpcServiceGrpc
+import br.com.zup.orangetalents.TipoDeChave
+import br.com.zup.orangetalents.TipoDeConta
+import br.com.zup.orangetalents.compartilhado.exception.ChavePixExistenteException
 import br.com.zup.orangetalents.integracao.*
 import br.com.zup.orangetalents.pix.*
 import com.google.rpc.BadRequest
@@ -8,7 +12,6 @@ import io.grpc.ManagedChannel
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.grpc.protobuf.StatusProto
-import io.micronaut.context.ApplicationContext
 import io.micronaut.context.annotation.Bean
 import io.micronaut.context.annotation.Factory
 import io.micronaut.grpc.annotation.GrpcChannel
@@ -16,10 +19,8 @@ import io.micronaut.grpc.server.GrpcServerChannel
 import io.micronaut.http.HttpResponse
 import io.micronaut.test.annotation.MockBean
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.mockito.Mockito.*
 import java.time.LocalDateTime
 import javax.inject.Inject
@@ -27,7 +28,7 @@ import javax.inject.Inject
 @MicronautTest(transactional = false)
 internal class RegistraChaveEndpointTest(
     @Inject private val grpcClient: KeyManagerRegisterGrpcServiceGrpc.KeyManagerRegisterGrpcServiceBlockingStub,
-    @Inject private val chavePixRepository: ChavePixRepository
+    @Inject private val chavePixRepository: ChavePixRepository,
 ) {
 
     @Inject
@@ -83,12 +84,16 @@ internal class RegistraChaveEndpointTest(
             )
         )
 
-        `when`(itauClient.consultaContaPorClienteETipo(chavePixRequestTest.codigoCliente, chavePixRequestTest.tipoConta.toString()))
+        `when`(
+            itauClient.consultaContaPorClienteETipo(
+                chavePixRequestTest.codigoCliente,
+                chavePixRequestTest.tipoConta.toString()
+            )
+        )
             .thenReturn(consultaContaResponse)
 
         `when`(bacenClient.registraChavePix(createPixKeyRequestTest))
-            .thenReturn(HttpResponse.created(createPixKeyResponseTest)
-            )
+            .thenReturn(HttpResponse.created(createPixKeyResponseTest))
 
         val chavePixResponse = grpcClient.registraChavePix(chavePixRequestTest)
         val chavePixCadastrada = chavePixRepository.findById(chavePixResponse.pixId)
@@ -126,10 +131,16 @@ internal class RegistraChaveEndpointTest(
             )
         )
 
-        `when`(itauClient.consultaContaPorClienteETipo(chavePixRequestTest.codigoCliente, chavePixRequestTest.tipoConta.toString()))
+        `when`(
+            itauClient.consultaContaPorClienteETipo(
+                chavePixRequestTest.codigoCliente,
+                chavePixRequestTest.tipoConta.toString()
+            )
+        )
             .thenReturn(consultaContaResponse)
 
-        `when`(bacenClient.registraChavePix(createPixKeyRequestTest)).thenReturn(HttpResponse.unprocessableEntity())
+        `when`(bacenClient.registraChavePix(createPixKeyRequestTest))
+            .thenThrow(ChavePixExistenteException("A chave pix informada já existe no Banco Central do Brasil."))
 
         assertThrows(StatusRuntimeException::class.java) {
             grpcClient.registraChavePix(chavePixRequestTest)
@@ -175,7 +186,10 @@ internal class RegistraChaveEndpointTest(
 
     @Test
     fun `deve converter parametro para DTO com dados inválidos se TipoChave e TipoConta nao informados`() {
-        val chavePixRequest = criaChavePixRequest(tipoChave = TipoDeChave.TIPO_CHAVE_DESCONHECIDA, tipoConta = TipoDeConta.TIPO_CONTA_DESCONHECIDO)
+        val chavePixRequest = criaChavePixRequest(
+            tipoChave = TipoDeChave.TIPO_CHAVE_DESCONHECIDA,
+            tipoConta = TipoDeConta.TIPO_CONTA_DESCONHECIDO
+        )
 
         val novaChavePix = chavePixRequest.paraChave()
 
@@ -216,7 +230,7 @@ internal class RegistraChaveEndpointTest(
 internal fun criaChavePix(
     chave: String = "email@email.com",
     clienteId: String = "b0a9fde7-ce93-4a5c-8485-d93c98f0e0a2"
-    ) : ChavePix {
+): ChavePix {
     return ChavePix(
         TipoChave.EMAIL,
         chave,

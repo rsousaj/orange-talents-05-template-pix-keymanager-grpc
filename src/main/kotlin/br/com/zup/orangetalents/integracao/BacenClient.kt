@@ -18,8 +18,6 @@ interface BacenClient {
         consumes = [MediaType.APPLICATION_XML],
         produces = [MediaType.APPLICATION_XML]
         )
-//    @Consumes(MediaType.APPLICATION_XML)
-//    @Produces(MediaType.APPLICATION_XML)
     fun registraChavePix(@Body request: CreatePixKeyRequest): HttpResponse<CreatePixKeyResponse>
 
     @Delete("/api/v1/pix/keys/{key}")
@@ -29,9 +27,6 @@ interface BacenClient {
         @PathVariable("key") chave: String,
         @Body request: DeletePixKeyRequest
     ): HttpResponse<DeletePixKeyResponse>
-
-    fun teste() = "testando"
-
 }
 
 data class CreatePixKeyResponse(
