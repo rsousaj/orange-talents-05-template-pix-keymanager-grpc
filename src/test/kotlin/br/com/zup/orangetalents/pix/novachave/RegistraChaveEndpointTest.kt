@@ -17,6 +17,8 @@ import io.micronaut.context.annotation.Factory
 import io.micronaut.grpc.annotation.GrpcChannel
 import io.micronaut.grpc.server.GrpcServerChannel
 import io.micronaut.http.HttpResponse
+import io.micronaut.http.HttpStatus
+import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.annotation.MockBean
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
 import org.junit.jupiter.api.*
@@ -274,13 +276,13 @@ internal fun criaCreatePixKeyResponse(
     return CreatePixKeyResponse(
         pixKeyType.toString(),
         chave,
-        CreatePixKeyContaResponse(
+        ContaResponse(
             "",
             agencia,
             conta,
             tipoConta.toString()
         ),
-        CreatePixKeyTitularResponse(
+        TitularResponse(
             name = nomeTitular,
             taxIdNumber = cpfTitular
         ),

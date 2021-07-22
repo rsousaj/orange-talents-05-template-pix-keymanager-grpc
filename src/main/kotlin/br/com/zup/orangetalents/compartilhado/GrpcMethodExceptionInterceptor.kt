@@ -35,6 +35,7 @@ class GrpcMethodExceptionInterceptor : MethodInterceptor<Any, Any?> {
                 is ConstraintViolationException -> constroiExcecaoArgumetosInvalidos(ex)
                 is HttpClientResponseException -> asRunTimeException(Status.UNAVAILABLE, ex)
                 is IllegalStateException -> asRunTimeException(Status.FAILED_PRECONDITION, ex)
+                is IllegalArgumentException -> asRunTimeException(Status.FAILED_PRECONDITION, ex)
                 else -> asRunTimeException(Status.INTERNAL, ex)
             }
 

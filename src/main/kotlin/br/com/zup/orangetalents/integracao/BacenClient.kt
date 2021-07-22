@@ -1,9 +1,7 @@
 package br.com.zup.orangetalents.integracao
 
-import br.com.zup.orangetalents.pix.ChavePix
-import br.com.zup.orangetalents.pix.Conta
-import br.com.zup.orangetalents.pix.TipoChave
-import br.com.zup.orangetalents.pix.TitularConta
+import br.com.zup.orangetalents.pix.*
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.MediaType
 import io.micronaut.http.annotation.*
@@ -27,24 +25,29 @@ interface BacenClient {
         @PathVariable("key") chave: String,
         @Body request: DeletePixKeyRequest
     ): HttpResponse<DeletePixKeyResponse>
+
+    @Get("/api/v1/pix/keys/{key}")
+    fun consultaChavePix(
+        @PathVariable("key") chave: String
+    ): HttpResponse<PixKeyDetailsResponse>
 }
 
 data class CreatePixKeyResponse(
     val keyType: String,
     val key: String,
-    val bankAccount: CreatePixKeyContaResponse,
-    val owner: CreatePixKeyTitularResponse,
+    val bankAccount: ContaResponse,
+    val owner: TitularResponse,
     val createdAt: LocalDateTime
 )
 
-data class CreatePixKeyContaResponse(
+data class ContaResponse(
     val participant: String,
     val branch: String,
     val accountNumber: String,
     val accountType: String,
 )
 
-data class CreatePixKeyTitularResponse(
+data class TitularResponse(
     val type: String = "NATURAL_PERSON",
     val name: String,
     val taxIdNumber: String
@@ -132,6 +135,39 @@ data class DeletePixKeyRequest(
     val key: String,
 ) {
     val participant = "60701190"
+}
+
+data class PixKeyDetailsResponse(
+    @field:JsonProperty("keyType")
+    val tipoChave: String,
+
+    @field:JsonProperty("key")
+    val chave: String,
+
+    @field:JsonProperty("bankAccount")
+    val conta: ContaResponse,
+
+    @field:JsonProperty("owner")
+    val titular: TitularResponse,
+
+    val createdAt: LocalDateTime
+) {
+    fun paraChavePix(): ChavePix {
+        return ChavePix(
+            tipoChave = PixKeyType.valueOf(tipoChave).tipoChave,
+            chave = this.chave,
+            conta = Conta(
+                tipoConta = TipoConta.CONTA_POUPANCA,
+                numero = this.conta.accountNumber,
+                agencia = this.conta.branch,
+                titular = TitularConta(
+                    id = "",
+                    nome = this.titular.name,
+                    cpf = this.titular.taxIdNumber
+                )
+            )
+        )
+    }
 }
 
 data class ProblemResponse(

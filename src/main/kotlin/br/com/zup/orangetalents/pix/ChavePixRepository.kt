@@ -12,4 +12,6 @@ interface ChavePixRepository : JpaRepository<ChavePix, String> {
 
     @Query("select c from ChavePix c where c.id = :id AND c.conta.titular.id = :clientId")
     fun findByIdAndClientId(id: String, clientId: String) : Optional<ChavePix>
+
+    fun findByChave(chave: String) : Optional<ChavePix>
 }

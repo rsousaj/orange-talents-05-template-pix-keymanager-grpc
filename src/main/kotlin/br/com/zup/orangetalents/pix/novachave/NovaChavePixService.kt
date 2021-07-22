@@ -11,6 +11,7 @@ import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.validation.Validated
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.ZoneId
 import javax.inject.Singleton
 import javax.transaction.Transactional
 import javax.validation.Valid
@@ -39,17 +40,14 @@ class NovaChavePixService(
 
         val chavePix = novaChavePix.paraModelo(conta).let { chavePixRepository.save(it) }
 
-//        logger.info("Registrando chave Pix (ID: ${chavePix.id}) no sistema do BACEN")
-//        bacenClient
-//            .registraChavePix(CreatePixKeyRequest.deChavePix(chavePix))
-//            .body()
-//            ?.let {
-//                chavePix.createdAt = it.createdAt
-//                chavePix.chave = it.key
-//            }
-
-        val response = bacenClient.registraChavePix(CreatePixKeyRequest.deChavePix(chavePix))
-        println(response.status)
+        logger.info("Registrando chave Pix (ID: ${chavePix.id}) no sistema do BACEN")
+        bacenClient
+            .registraChavePix(CreatePixKeyRequest.deChavePix(chavePix))
+            .body()
+            ?.let {
+                chavePix.createdAt = it.createdAt.atZone(ZoneId.of("UTC")).toLocalDateTime()
+                chavePix.atualiza(it.key)
+            }
 
         return chavePix
     }

@@ -32,4 +32,25 @@ class ChavePix(
 
     val clienteId
         get() = conta.titular.id
+
+    @Enumerated(EnumType.STRING)
+    var status = ChavePixStatus.SINCRONIZADA_BCB
+
+    fun atualiza(chave: String) {
+        if (isAleatoria()) {
+            this.chave = chave
+        }
+    }
+
+    fun isAleatoria(): Boolean {
+        return tipoChave == TipoChave.ALEATORIO
+    }
+
+    fun isSincronizadaBacen(): Boolean {
+        return status == ChavePixStatus.SINCRONIZADA_BCB
+    }
+}
+
+enum class ChavePixStatus {
+    EM_PROCESSAMENTO, SINCRONIZADA_BCB
 }
