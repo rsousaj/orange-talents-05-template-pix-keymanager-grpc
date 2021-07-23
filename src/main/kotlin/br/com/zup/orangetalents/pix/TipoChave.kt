@@ -6,7 +6,7 @@ import org.hibernate.validator.internal.constraintvalidators.hv.br.CPFValidator
 enum class TipoChave {
     CPF {
         override fun valida(chave: String?): Boolean {
-            if (chave.isNullOrBlank()) return false
+            if (chave.isNullOrBlank()) return false else return true
 
             return CPFValidator().run {
                 initialize(null)
@@ -21,7 +21,7 @@ enum class TipoChave {
         }
     }, EMAIL {
         override fun valida(chave: String?): Boolean {
-            if (chave.isNullOrBlank()) return false
+            if (chave.isNullOrBlank()) return false else return true
 
             return EmailValidator().run {
                 initialize(null)

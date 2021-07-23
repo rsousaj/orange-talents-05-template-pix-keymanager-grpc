@@ -1,40 +1,37 @@
 package br.com.zup.orangetalents.pix.novachave
 
-import io.micronaut.core.annotation.AnnotationValue
-import io.micronaut.validation.validator.constraints.ConstraintValidator
-import io.micronaut.validation.validator.constraints.ConstraintValidatorContext
-import java.util.*
-import javax.inject.Singleton
-import javax.validation.Constraint
 import javax.validation.Payload
-import javax.validation.ReportAsSingleViolation
-import kotlin.annotation.AnnotationRetention.*
-import kotlin.annotation.AnnotationTarget.*
+import javax.validation.constraints.Pattern
+import kotlin.annotation.AnnotationRetention.RUNTIME
+import kotlin.annotation.AnnotationTarget.FIELD
 import kotlin.reflect.KClass
 
 @Retention(RUNTIME)
 @Target(FIELD, AnnotationTarget.PROPERTY, AnnotationTarget.VALUE_PARAMETER)
-@Constraint(validatedBy = [ValidaUUIDValidator::class])
+@Pattern(
+    regexp = "^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+    flags = [Pattern.Flag.CASE_INSENSITIVE]
+)
 annotation class ValidoUUID(
     val message: String = "Identificador UUID inválido",
     val groups: Array<KClass<*>> = [],
     val payload: Array<KClass<out Payload>> = []
 )
 
-@Singleton
-class ValidaUUIDValidator : ConstraintValidator<ValidoUUID, String> {
-    override fun isValid(
-        value: String,
-        annotationMetadata: AnnotationValue<ValidoUUID>,
-        context: ConstraintValidatorContext
-    ): Boolean {
-        if (value.isNullOrBlank()) return true
-
-        return try {
-            UUID.fromString(value)
-            true
-        } catch (ex: IllegalArgumentException) {
-            false
-        }
-    }
-}
+//@Singleton
+//class ValidaUUIDValidator : ConstraintValidator<ValidoUUID, String> {
+//    override fun isValid(
+//        value: String,
+//        annotationMetadata: AnnotationValue<ValidoUUID>,
+//        context: ConstraintValidatorContext
+//    ): Boolean {
+//        if (value.isNullOrBlank()) return true
+//
+//        return try {
+//            UUID.fromString(value)
+//            true
+//        } catch (ex: IllegalArgumentException) {
+//            false
+//        }
+//    }
+//}

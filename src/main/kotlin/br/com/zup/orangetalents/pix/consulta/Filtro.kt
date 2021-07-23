@@ -8,34 +8,12 @@ import br.com.zup.orangetalents.pix.novachave.ValidoUUID
 import io.micronaut.core.annotation.Introspected
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.HttpStatus
-import io.micronaut.validation.Validated
 import javax.validation.constraints.NotBlank
 import javax.validation.constraints.Size
 
-@Introspected
 sealed class FiltroConsulta {
 
     abstract fun executa(chavePixRepository: ChavePixRepository, bacenClient: BacenClient): DetalheChavePix
-
-    @Introspected
-    data class FiltroPixId(
-        @field:NotBlank
-        @field:ValidoUUID
-        val clienteId: String,
-
-        @field:NotBlank
-        @field:ValidoUUID
-        val pixId: String
-    ) : FiltroConsulta() {
-
-        override fun executa(chavePixRepository: ChavePixRepository, bacenClient: BacenClient): DetalheChavePix {
-            return chavePixRepository
-                .findByIdAndClientId(id = pixId, clientId = clienteId)
-                .filter { it.isSincronizadaBacen() }
-                .map(DetalheChavePix::de)
-                .orElseThrow { ChavePixNaoEncontradaException("A chave informada não foi localizada ou encontra-se em processamento.") }
-        }
-    }
 
     @Introspected
     data class FiltroChave(
@@ -56,6 +34,26 @@ sealed class FiltroConsulta {
                         else -> throw ChavePixNaoEncontradaException("A chave informada não foi localizada.")
                     }
                 }
+        }
+    }
+
+    @Introspected
+    data class FiltroPixId(
+        @field:NotBlank
+        @field:ValidoUUID
+        val clienteId: String,
+
+        @field:NotBlank
+        @field:ValidoUUID
+        val pixId: String
+    ) : FiltroConsulta() {
+
+        override fun executa(chavePixRepository: ChavePixRepository, bacenClient: BacenClient): DetalheChavePix {
+            return chavePixRepository
+                .findByIdAndClientId(id = pixId, clientId = clienteId)
+                .filter { it.isSincronizadaBacen() }
+                .map(DetalheChavePix::de)
+                .orElseThrow { ChavePixNaoEncontradaException("A chave informada não foi localizada ou encontra-se em processamento.") }
         }
     }
 }
